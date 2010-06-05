@@ -27,6 +27,14 @@ from optparse import OptionParser
 from boto.ec2.connection import EC2Connection
 
 
+def terminateall(connection):
+    instances = []
+    reservations = connection.get_all_instances()
+    for reservation in reservations:
+        instances.extend([instance.id for instance in reservation.instances])
+    connection.terminate_instances(instances)
+
+
 def main():
     parser = OptionParser()
     parser.add_option("-A", "--aws-access-key-id",
@@ -38,11 +46,10 @@ def main():
     if not opts.awsAccessKeyID:
         parser.error("AWS access key ID required")
     if not opts.awsSecretAccessKey:
-        parse.error("AWS secret access key required")
+        parser.error("AWS secret access key required")
 
     connection = EC2Connection(opts.awsAccessKeyID, opts.awsSecretAccessKey)
-    instances = connection.get_all_instances()
-    connection.terminate_instances(instances)
+    terminateall(connection)
 
 
 if __name__ == "__main__":
