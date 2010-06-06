@@ -21,6 +21,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+"""
+Renames a security group.  Does not change the region.
+"""
+
+
 import os, sys
 import time
 from optparse import OptionParser
@@ -89,18 +94,18 @@ def main():
     connection = EC2Connection(awsAccessKeyID, awsSecretAccessKey,
             region=region)
 
-    if opts.force:
-        try:
-            group = connection.get_all_security_groups([newName])[0]
-            group.delete()
-        except EC2ResponseError:
-            pass
-
     try:
         group = connection.get_all_security_groups([origName])[0]
     except IndexError:
         sys.stderr.write("No such group %s, wrong region?\n" % origName)
         sys.exit(1)
+
+    if opts.force:
+        try:
+            oldGroup = connection.get_all_security_groups([newName])[0]
+            oldGroup.delete()
+        except EC2ResponseError:
+            pass
 
     try:
         renameGroup(connection, group, newName, opts.terminate)
