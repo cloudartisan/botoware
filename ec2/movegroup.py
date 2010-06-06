@@ -21,6 +21,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+"""
+Moves a group from one region to another.
+"""
+
+
 import os, sys
 import time
 from optparse import OptionParser
@@ -34,20 +39,20 @@ from utils import TimeoutError, waitForStateWithTimeout
 class GroupRenameError(Exception): pass
 
 
-def renameGroup(connection, group, newName, terminate=False):
+def moveGroup(connection, group, newRegion, terminate=False):
     instances = group.instances()
     if len(instances) > 0 and terminate == False:
         raise GroupRenameError("Security group in use, not terminating")
     if instances:
         connection.terminate_instances([instance.id for instance in instances])
         waitForStateWithTimeout(instances, "terminated")
-    group.copy_to_region(group.region, newName)
+    group.copy_to_region(newRegion, group.name)
     group.delete()
 
 
 def main():
     parser = OptionParser()
-    parser.usage = "%prog: [options] <original name> <new name>"
+    parser.usage = "%prog: [options] <group name> <from region> <to region>"
     parser.add_option("-A", "--aws-access-key-id",
         default=os.environ.get("AWS_ACCESS_KEY", None),
         dest="awsAccessKeyID",
@@ -75,35 +80,45 @@ def main():
     if not (opts.awsAccessKeyID or opts.awsSecretAccessKey):
         parser.error("provide AWS access key ID and secret access key")
 
-    if not (len(args) == 2):
-        parser.error("supply original and new group names")
+    if len(args) != 3:
+        parser.error("insufficient arguments")
 
-    origName = args[0]
-    newName = args[1]
-    assert origName != newName, "Original and new names must not match"
+    groupName = args[0]
+    fromRegion = args[1]
+    toRegion = args[2]
+    if fromRegion == toRegion:
+        sys.stderr.write("From and to regions must be different\n")
+        sys.exit(1)
 
     awsAccessKeyID = opts.awsAccessKeyID
     awsSecretAccessKey = opts.awsSecretAccessKey
     region = opts.region
 
-    connection = EC2Connection(awsAccessKeyID, awsSecretAccessKey,
-            region=region)
-
-    if opts.force:
-        try:
-            group = connection.get_all_security_groups([newName])[0]
-            group.delete()
-        except EC2ResponseError:
-            pass
-
     try:
-        group = connection.get_all_security_groups([origName])[0]
+        connection = EC2Connection(awsAccessKeyID, awsSecretAccessKey,
+            region=fromRegion)
+        srcGroup = connection.get_all_security_groups([groupName])[0]
     except IndexError:
         sys.stderr.write("No such group %s, wrong region?\n" % origName)
         sys.exit(1)
+    except EC2ResponseError:
+        soup = BeautifulStoneSoup(response.body)
+        reason = soup.response.errors.error.message.contents[0]
+        sys.stderr.write("%s\n" % reason)
+        sys.exit(1)
+
+    # If force, get rid of any destination that might be in the way
+    if opts.force:
+        try:
+            connection = EC2Connection(awsAccessKeyID, awsSecretAccessKey,
+                region=toRegion)
+            destGroup = connection.get_all_security_groups([groupName])[0]
+            destGroup.delete()
+        except (IndexError, EC2ResponseError):
+            pass
 
     try:
-        renameGroup(connection, group, newName, opts.terminate)
+        moveGroup(connection, srcGroup, toRegion, opts.terminate)
     except (GroupRenameError, TimeoutError), message:
         sys.stderr.write("%s\n" % message)
         sys.exit(1)

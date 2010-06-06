@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # Copyright (c) 2010 David Taylor
 # http://www.cloudartisan.com
 # 
@@ -21,37 +21,29 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-"""
-Stops all servers.
-"""
+import time
 
 
-from optparse import OptionParser
-from boto.ec2.connection import EC2Connection
+class TimeoutError(Exception): pass
 
 
-def stopall(connection):
-    reservations = connection.get_all_instances()
-    for reservation in reservations:
-        reservation.stop_all()
-
-
-def main():
-    parser = OptionParser()
-    parser.add_option("-A", "--aws-access-key-id",
-        dest="awsAccessKeyID", help="AWS access key ID")
-    parser.add_option("-S", "--aws-secret-access-key",
-        dest="awsSecretAccessKey", help="AWS secret access key")
-    opts, args = parser.parse_args()
-
-    if not opts.awsAccessKeyID:
-        parser.error("AWS access key ID required")
-    if not opts.awsSecretAccessKey:
-        parser.error("AWS secret access key required")
-
-    connection = EC2Connection(opts.awsAccessKeyID, opts.awsSecretAccessKey)
-    stopall(connection)
-
-
-if __name__ == "__main__":
-    main()
+def waitForStateWithTimeout(instances, desiredState, timeout=300, nap=10):
+    """
+    Waits a limited period of time for a list of instances to reach a
+    desired state.  Raises TimeoutError if the timeout occurs.
+    """
+    start = time.time()
+    end = start + timeout
+    waiting = instances[:]
+    while waiting and time.time() < end:
+        checking = waiting[:]
+        ready = []
+        for instance in checking:
+            instance.update()
+            if instance.state == desiredState:
+                waiting.remove(instance)
+            else:
+                print "[%d] %s not ready" % (time.time() - start, instance)
+        time.sleep(nap)
+    if len(waiting) != 0:
+        raise TimeoutError("%s still running" % waiting)
