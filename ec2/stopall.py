@@ -28,7 +28,6 @@ from boto.ec2.connection import EC2Connection
 
 
 def stopall(connection):
-    instances = []
     reservations = connection.get_all_instances()
     for reservation in reservations:
         reservation.stop_all()
