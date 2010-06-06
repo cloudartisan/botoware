@@ -31,8 +31,7 @@ def stopall(connection):
     instances = []
     reservations = connection.get_all_instances()
     for reservation in reservations:
-        instances.extend([instance.id for instance in reservation.instances])
-    connection.stop_instances(instances)
+        reservation.stop_all()
 
 
 def main():
