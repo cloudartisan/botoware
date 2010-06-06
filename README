@@ -1,0 +1,4 @@
+EC2 Tools
+ec2/renamegroup.py - rename (really, copy then delete) a security group
+ec2/stopall.py - stop all server instances
+ec2/terminateall.py - terminate all server instances
