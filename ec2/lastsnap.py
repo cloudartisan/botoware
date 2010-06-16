@@ -54,12 +54,17 @@ def main():
     parser.add_option("-o", "--owner",
         default="self",
         dest="owner",
-        help="Snapshot owner")
+        help="Snapshot owner (self/all/<user ID>)")
     parser.add_option("-O", "--oldest",
         default=False,
         action="store_true",
         dest="oldest",
         help="Oldest instead of most recent")
+    parser.add_option("-i", "--invert",
+        default=False,
+        action="store_true",
+        dest="invert",
+        help="Invert the search result (eg, recent 7 of 10 becomes oldest 3")
     parser.add_option("-n", "--num",
         default=1,
         dest="num",
@@ -68,17 +73,26 @@ def main():
         default=None,
         dest="description",
         help="Limit the search based on description")
+    parser.add_option("-v", "--verbose",
+        default=False,
+        action="store_true",
+        dest="verbose",
+        help="Verbose results")
     opts, args = parser.parse_args()
 
     if not (opts.awsAccessKeyID or opts.awsSecretAccessKey):
         parser.error("provide AWS access key ID and secret access key")
 
-    awsAccessKeyID = opts.awsAccessKeyID
-    awsSecretAccessKey = opts.awsSecretAccessKey
-    region = opts.region
-    owner = opts.owner
-    description = opts.description
-    oldest = opts.oldest
+    if os.path.isfile(opts.awsAccessKeyID):
+        awsAccessKeyID = open(opts.awsAccessKeyID).read().strip()
+    else:
+        awsAccessKeyID = opts.awsAccessKeyID
+
+    if os.path.isfile(opts.awsSecretAccessKey):
+        awsSecretAccessKey = open(opts.awsSecretAccessKey).read().strip()
+    else:
+        awsSecretAccessKey = opts.awsSecretAccessKey
+
     try:
         num = int(opts.num)
     except TypeError:
@@ -87,33 +101,42 @@ def main():
 
     try:
         connection = EC2Connection(awsAccessKeyID, awsSecretAccessKey,
-            region=region)
-        snapshots = connection.get_all_snapshots(owner=owner)
-    except EC2ResponseError:
+            region=opts.region)
+        snapshots = connection.get_all_snapshots(owner=opts.owner)
+    except EC2ResponseError, response:
         soup = BeautifulStoneSoup(response.body)
         reason = soup.response.errors.error.message.contents[0]
         sys.stderr.write("%s\n" % reason)
         sys.exit(1)
 
     # Filter by prefix of each description?
-    if description:
-        f = lambda s: s.description.startswith(description)
+    if opts.description:
+        f = lambda s: s.description.startswith(opts.description)
         snapshots = filter(f, snapshots)
 
     # Sort by start time
-    sortedsnaps = []
+    sortedSnaps = []
     for snapshot in snapshots:
         secs = mktime(strptime(snapshot.start_time, "%Y-%m-%dT%H:%M:%S.000Z"))
-        bisect.insort(sortedsnaps, (secs, snapshot))
+        bisect.insort(sortedSnaps, (secs, snapshot))
 
     last = []
-    if oldest:
-        last = map(lambda s: s[1], sortedsnaps[0:num])
+    if opts.oldest:
+        if opts.invert:
+            last = map(lambda s: s[1], sortedSnaps[num:])
+        else:
+            last = map(lambda s: s[1], sortedSnaps[0:num])
     else:
-        last = map(lambda s: s[1], sortedsnaps[-num:])
+        if opts.invert:
+            last = map(lambda s: s[1], sortedSnaps[0:-num])
+        else:
+            last = map(lambda s: s[1], sortedSnaps[-num:])
 
     for l in last:
-        print l.id, l.description, l.start_time
+        if opts.verbose:
+            print l.id, l.start_time, l.description
+        else:
+            print l.id
 
 
 if __name__ == "__main__":
