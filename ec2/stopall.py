@@ -28,29 +28,38 @@ Stops all servers.
 
 from optparse import OptionParser
 from boto.ec2.connection import EC2Connection
-
-
-def stopall(connection):
-    reservations = connection.get_all_instances()
-    for reservation in reservations:
-        reservation.stop_all()
+from Instances import stop_all
 
 
 def main():
     parser = OptionParser()
     parser.add_option("-A", "--aws-access-key-id",
-        dest="awsAccessKeyID", help="AWS access key ID")
+        default=os.environ.get("AWS_ACCESS_KEY_ID", None),
+        dest="aws_access_key_id", help="AWS access key ID")
     parser.add_option("-S", "--aws-secret-access-key",
-        dest="awsSecretAccessKey", help="AWS secret access key")
+        default=os.environ.get("AWS_SECRET_ACCESS_KEY", None),
+        dest="aws_secret_access_key", help="AWS secret access key")
+    parser.add_option("--region", default=None,
+        dest="region", help="Web service region to use")
     opts, args = parser.parse_args()
 
-    if not opts.awsAccessKeyID:
-        parser.error("AWS access key ID required")
-    if not opts.awsSecretAccessKey:
-        parser.error("AWS secret access key required")
+    if not opts.aws_access_key_id:
+        parser.error("AWS access key required")
 
-    connection = EC2Connection(opts.awsAccessKeyID, opts.awsSecretAccessKey)
-    stopall(connection)
+    if not opts.aws_secret_access_key:
+        parser.error("AWS secret key required")
+
+    if os.path.isfile(opts.aws_access_key_id):
+        aws_access_key_id = open(opts.aws_access_key_id).read().strip()
+    else:
+        aws_access_key_id = opts.aws_access_key_id
+
+    if os.path.isfile(opts.aws_secret_access_key):
+        aws_secret_access_key = open(opts.aws_secret_access_key).read().strip()
+    else:
+        aws_secret_access_key = opts.aws_secret_access_key
+
+    stop_all(aws_access_key_id, aws_secret_access_key, region=opts.region)
 
 
 if __name__ == "__main__":
