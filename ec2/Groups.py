@@ -30,19 +30,24 @@ class GroupMoveError(GroupError): pass
 class GroupCopyError(GroupError): pass
 
 
-def copy_group(aws_access_key, aws_secret_key, src_group_name, dst_group_name,
+def copy_group(aws_access_key_id, aws_secret_access_key,
+        src_group_name, dst_group_name,
         src_region_name="us-east-1", dst_region_name="us-east-1",
         force=False, terminate=False):
     if (src_group_name == dst_group_name) and (src_region_name == dst_region_name):
         raise GroupCopyError, "source and destination are identical"
     # Get the source and destination regions
     src_region = get_region(src_region_name,
-        aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key_id=aws_secret_access_key)
     dst_region = get_region(dst_region_name,
-        aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key_id=aws_secret_access_key)
     # Get the source and destination connections
-    src_conn = EC2Connection(aws_access_key, aws_secret_key, region=src_region)
-    dst_conn = EC2Connection(aws_access_key, aws_secret_key, region=dst_region)
+    src_conn = EC2Connection(aws_access_key_id, aws_secret_access_key,
+        region=src_region)
+    dst_conn = EC2Connection(aws_access_key_id, aws_secret_access_key,
+        region=dst_region)
     # Find the source group, otherwise give up
     try:
         src_group = src_conn.get_all_security_groups([src_group_name])[0]
@@ -75,19 +80,24 @@ def copy_group(aws_access_key, aws_secret_key, src_group_name, dst_group_name,
     return new_group
 
 
-def move_group(aws_access_key, aws_secret_key, src_group_name, dst_group_name,
+def move_group(aws_access_key_id, aws_secret_access_key,
+        src_group_name, dst_group_name,
         src_region_name="us-east-1", dst_region_name="us-east-1",
         force=False, terminate=False):
     if (src_group_name == dst_group_name) and (src_region_name == dst_region_name):
         raise GroupMoveError, "source and destination are identical"
     # Get the source and destination regions
     src_region = get_region(src_region_name,
-        aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key_id=aws_secret_access_key)
     dst_region = get_region(dst_region_name,
-        aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key_id=aws_secret_access_key)
     # Get the source and destination connections
-    src_conn = EC2Connection(aws_access_key, aws_secret_key, region=src_region)
-    dst_conn = EC2Connection(aws_access_key, aws_secret_key, region=dst_region)
+    src_conn = EC2Connection(aws_access_key_id, aws_secret_access_key,
+        region=src_region)
+    dst_conn = EC2Connection(aws_access_key_id, aws_secret_access_key,
+        region=dst_region)
     # Find the source group, otherwise give up
     try:
         src_group = src_conn.get_all_security_groups([src_group_name])[0]
