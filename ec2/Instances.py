@@ -47,11 +47,12 @@ def wait_for_state_by_instances(instances, desired_state, timeout=300, nap=10):
         raise StateTimeoutError("%s still running" % waiting)
 
 
-def reboot_all(aws_access_key, aws_secret_key, region):
+def reboot_all(aws_access_key_id, aws_secret_access_key, region):
     """
     Reboots all running instances in a given region.
     """
-    connection = EC2Connection(aws_access_key, aws_secret_key, region=region)
+    connection = EC2Connection(aws_access_key_id, aws_secret_access_key,
+        region=region)
     instances = []
     reservations = connection.get_all_instances()
     for reservation in reservations:
@@ -59,11 +60,12 @@ def reboot_all(aws_access_key, aws_secret_key, region):
     connection.reboot_instances(instances)
 
 
-def stop_all(aws_access_key, aws_secret_key, region):
+def stop_all(aws_access_key_id, aws_secret_access_key, region):
     """
     Stops all running instances in a given region.
     """
-    connection = EC2Connection(aws_access_key, aws_secret_key, region=region)
+    connection = EC2Connection(aws_access_key_id, aws_secret_access_key,
+        region=region)
     reservations = connection.get_all_instances()
     for reservation in reservations:
         reservation.stop_all()
