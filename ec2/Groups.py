@@ -39,10 +39,10 @@ def copy_group(aws_access_key_id, aws_secret_access_key,
     # Get the source and destination regions
     src_region = get_region(src_region_name,
         aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key_id=aws_secret_access_key)
+        aws_secret_access_key=aws_secret_access_key)
     dst_region = get_region(dst_region_name,
         aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key_id=aws_secret_access_key)
+        aws_secret_access_key=aws_secret_access_key)
     # Get the source and destination connections
     src_conn = EC2Connection(aws_access_key_id, aws_secret_access_key,
         region=src_region)
@@ -89,10 +89,10 @@ def move_group(aws_access_key_id, aws_secret_access_key,
     # Get the source and destination regions
     src_region = get_region(src_region_name,
         aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key_id=aws_secret_access_key)
+        aws_secret_access_key=aws_secret_access_key)
     dst_region = get_region(dst_region_name,
         aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key_id=aws_secret_access_key)
+        aws_secret_access_key=aws_secret_access_key)
     # Get the source and destination connections
     src_conn = EC2Connection(aws_access_key_id, aws_secret_access_key,
         region=src_region)
