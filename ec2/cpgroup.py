@@ -22,7 +22,7 @@
 
 
 """
-Copies a group.  Copes can be made within the same region or from one
+Copies a group.  Copies can be made within the same region or from one
 region to another.
 """
 
