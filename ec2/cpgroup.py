@@ -2,17 +2,17 @@
 #
 # Copyright (c) 2010 David Taylor
 # http://www.cloudartisan.com
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense,
 # and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -50,11 +50,11 @@ def main():
         dest="aws_secret_access_key",
         help="AWS secret access key")
     parser.add_option("-f", "--from-region",
-        default="us-east-1",
+        default=os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
         dest="from_region",
         help="The region to copy from")
     parser.add_option("-t", "--to-region",
-        default="us-east-1",
+        default=os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
         dest="to_region",
         help="The region to copy to")
     parser.add_option("-F", "--force",

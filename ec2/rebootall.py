@@ -46,7 +46,7 @@ def main():
         default=os.environ.get("AWS_SECRET_ACCESS_KEY", None),
         dest="aws_secret_access_key", help="AWS secret access key")
     parser.add_option("--region",
-        default="us-east-1",
+        default=os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
         dest="region",
         help="Web service region to use")
     opts, args = parser.parse_args()
